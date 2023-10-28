@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/styles.css">
     <title>Document</title>
 </head>
 <body>
@@ -17,6 +18,184 @@
         web application will provide users with access to information about different movies, directors, and genres.
         Users will be able to sign up, update their personal information, and create a list of their favorite movies.
     </p>
+
+    <h1>
+        Movie API Documentation
+    </h1>
+
+    <!-- Table for API documentation -->
+    <table border="1">
+
+        <!-- table header -->
+        <tr>
+            <th>Request</th>
+            <th>URL</th>
+            <th>HTTP Method</th>
+            <th>Request Body Data Format</th>
+            <th>Response Body Data Format</th>
+        </tr>
+
+
+
+        <!-- GET -->
+        <tr>
+            <td>Get a list of all movies</td>
+            <td>/movies</td>
+            <td>GET</td>
+            <td>none</td>
+            <td>A JSON object holding an array with all movies.</td>
+        </tr>
+
+        <!-- GET -->
+        <tr>
+            <td>Get data about a single movie by title</td>
+            <td>/movies/:title</td>
+            <td>GET</td>
+            <td>none</td>
+            <td>A JSON object holding data about a single movie, containing description, genre, director, image URL, and
+                if it is featured. Here is an example:
+                <br>
+                <br>
+                {
+                "Title": "Jurassic Park",
+                "Description": "Jurassic Park is a blockbuster film where genetically-engineered dinosaurs wreak havoc
+                in a theme park, putting visitors in peril. The movie explores the consequences of meddling with nature
+                and the struggle for survival in the face of prehistoric giants.",
+                "Genre": {
+                "Name": "Science Fiction Adventure",
+                "Description": "Is a genre that combines futuristic elements with thrilling action and exploration"
+                },
+                "Director": {
+                "Name": "Steven Spielberg",
+                "Bio": "Steven Spielberg was born on December 18, 1946, in Cincinnati, Ohio. He's famous for directing
+                many blockbuster movies, such as Jurassic Park, E.T. the Extra-Terrestrial and Schindler's List and he's
+                one of the most influential directors in the history of cinema.",
+                "Birth": 1946.0
+                },
+                "ImageURL": " ",
+                "Featured": false
+                }
+            </td>
+        </tr>
+
+        <!-- GET -->
+        <tr>
+            <td>Get data about a genre by title</td>
+            <td>/movies/genre/:genreName</td>
+            <td>GET</td>
+            <td>none</td>
+            <td>A JSON object holding data about a genre containing the properties for name and description. Here is an
+                example:
+                <br>
+                <br>
+                "Genre": {
+                "Name": "Science Fiction Adventure",
+                "Description": "Is a genre that combines futuristic elements with thrilling action and exploration"
+                }
+            </td>
+        </tr>
+
+
+
+
+        <!-- GET -->
+        <tr>
+            <td>Get data about a director by name</td>
+            <td>/movies/directors/:directorName</td>
+            <td>GET</td>
+            <td>none</td>
+            <td>A JSON object holding data about a director containing the properties for name, bio and birth. Here is
+                an example:
+                <br>
+                <br>
+                "Director": {
+                "Name": "Steven Spielberg",
+                "Bio": "Steven Spielberg was born on December 18, 1946, in Cincinnati, Ohio. He's famous for directing
+                many blockbuster movies, such as Jurassic Park, E.T. the Extra-Terrestrial and Schindler's List and he's
+                one of the most influential directors in the history of cinema.",
+                "Birth": 1946.0
+                }
+            </td>
+        </tr>
+
+        <!-- POST -->
+        <tr>
+            <td>Add a new user</td>
+            <td>/users</td>
+            <td>POST</td>
+            <td>A JSON object holding data about the user to add, structured like:
+                <br>
+                <br>
+                {
+                name: "Anna",
+                favoriteMovies: []
+                }
+            </td>
+            <td>A JSON object holding data about the user that was added, including an ID:
+                <br>
+                <br>
+                {
+                id: 1,
+                name: "Anna",
+                favoriteMovies: []
+                }
+            </td>
+        </tr>
+
+        <!-- PUT -->
+        <tr>
+            <td>Update user username</td>
+            <td>/users/:id</td>
+            <td>PUT</td>
+            <td>A JSON object holding data about the user to update, structured like:
+                <br>
+                <br>
+                {
+                name: "Anna",
+                favoriteMovies: []
+                }
+            </td>
+            <td>A JSON object holding data about the user that was updated, including an ID:
+                <br>
+                <br>
+                {
+                id: 1,
+                name: "Anna",
+                favoriteMovies: []
+                }
+            </td>
+        </tr>
+
+
+
+
+        <!-- POST -->
+        <tr>
+            <td>Add a movie to user favorite list</td>
+            <td>/users/:id/:movieTitle</td>
+            <td>POST</td>
+            <td>none</td>
+            <td>A text message indicating if a movie was successfully added to the favorite list of the user.</td>
+        </tr>
+
+        <!-- DELETE -->
+        <tr>
+            <td>Remove a movie from user favorite list</td>
+            <td>/users/:id/:movieTitle</td>
+            <td>DELETE</td>
+            <td>none</td>
+            <td>A text message indicating if a movie was successfully removed from the favorite list of the user.</td>
+        </tr>
+
+        <!-- DELETE -->
+        <tr>
+            <td>Delete user registration</td>
+            <td>/users/:id</td>
+            <td>DELETE</td>
+            <td>none</td>
+            <td>A text message indicating if a user was successfully removed.</td>
+        </tr>
+    </table>
 
 </body>
 </html>
