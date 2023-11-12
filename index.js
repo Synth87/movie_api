@@ -4,8 +4,24 @@ const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const uuid = require('uuid');
 
+// requiring the mongoose package and the models.js file (in which the mongoose models are)
+const mongoose = require('mongoose');
+const Models = require('./models.js');
+
+// extracting the individual models from the Models object
+const Movies = Models.Movie;
+const Users = Models.User;
+
+// allowing mongoose to connect to my database
+// "localhost" did not work. soltuion: use "127.0.0.1" instead.
+// mongoose.connect('mongodb://localhost:27017/cfDB', { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect('mongodb://127.0.0.1:27017/cfDB', { useNewUrlParser: true, useUnifiedTopology: true });
+
+
+
 // app encapsulates the functionality of express
 const app = express();
+
 
 
 // register the middleware function bodyParser globally for all incoming requests
@@ -13,6 +29,8 @@ const app = express();
 // the js object is then saved in the request object under req.body and can be used in the following functions
 // enables me to read data from the body object. Without this req.body would not be possible.
 app.use(bodyParser.json());
+// allows an Express application to parse URL-encoded form data, with "extended: true" enabling the handling of nested objects
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // serving static files from the "public" folder
 app.use(express.static('public'));
@@ -21,185 +39,259 @@ app.use(morgan('common'));
 
 
 
-// users array
-let users = [
-    {
-        id: 1,
-        name: "Kim",
-        favoriteMovies: []
+
+// Movies
+// Get all movies (Mongoose)
+app.get('/movies', async (req, res) => {
+    await Movies.find()
+        .then((movies) => {
+            res.status(200).json(movies);
+        })
+        .catch((err) => {
+            console.error(err);
+            res.status(500).send('Error: ' + err);
+        });
+});
+
+
+
+// Get movie by title (Mongoose)
+app.get('/movies/:title', async (req, res) => {
+    await Movies.findOne({ title: req.params.title })
+        .then((movie) => {
+            if (!movie) {
+                return res.status(404).send('Error: ' + req.params.title + ' was not found');
+            } else {
+                res.status(200).json(movie);
+            }
+        })
+        .catch((err) => {
+            console.error(err);
+            res.status(500).send('Error: ' + err);
+        });
+});
+
+
+
+// Get genre by name (Mongoose)
+app.get('/movies/genre/:genreName', async (req, res) => {
+    await Movies.findOne({ 'genre.name': req.params.genreName })
+        // if the search is successful the whole movie object is given back
+        .then((movie) => {
+            if (!movie) {
+                return res.status(404).send('Error: ' + req.params.genreName + ' was not found');
+            } else {
+                res.status(200).json(movie.genre);
+            }
+        })
+        .catch((err) => {
+            console.error(err);
+            res.status(500).send('Error: ' + err);
+        });
+});
+
+
+
+// Get director by name (Mongoose)
+app.get('/movies/director/:directorName', async (req, res) => {
+    await Movies.findOne({ 'director.name': req.params.directorName })
+        .then((movie) => {
+            if (!movie) {
+                return res.status(404).send('Error: ' + req.params.directorName + ' was not found');
+            } else {
+                res.status(200).json(movie.director);
+            }
+        })
+        .catch((err) => {
+            console.error(err);
+            res.status(500).send('Error: ' + err);
+        });
+});
+
+
+
+
+
+
+
+// Users
+// Get all users (Mongoose)
+app.get('/users', async (req, res) => {
+    await Users.find()
+        .then((users) => {
+            res.status(200).json(users);
+        })
+        .catch((err) => {
+            console.error(err);
+            res.status(500).send('Error: ' + err);
+        });
+});
+
+
+
+// Get a user by username (Mongoose)
+app.get('/users/:username', async (req, res) => {
+    await Users.findOne({ username: req.params.username })
+        .then((user) => {
+            if (!user) {
+                return res.status(404).send('Error: ' + req.params.username + ' was not found');
+            } else {
+                res.status(200).json(user);
+            }
+        })
+        .catch((err) => {
+            console.error(err);
+            res.status(500).send('Error: ' + err);
+        });
+});
+
+
+
+// CREATE - a new user (Mongoose)
+//Add a user
+/* We’ll expect JSON in this format
+{
+  ID: Integer,
+  Username: String,
+  Password: String,
+  Email: String,
+  Birthday: Date
+}*/
+
+app.post('/users', async (req, res) => {
+    // check if a user with the username provided by the client already exists
+    await Users.findOne({ username: req.body.username })
+        .then((user) => {
+            if (user) {
+                return res.status(400).send(req.body.username + ' already exists');
+            } else {
+                // create commands takes an object
+                // each key in the object corresponds to a certain field specified in the schema
+                // each value is set to a value that I receive from the request body via req.body
+                // I can collect all the info from the HTTP request body using Mongoose
+
+                // Mongoose is used to populate a user document and then it is added to the database
+                // Mongoose is translating Node.js code into a MongoDB command 
+                // This command runs behind the scenes to insert a record into my “Users” collection
+                // The app uses Mongoose’s create command on the model to execute this database operation on MongoDB automatically
+                Users.create({
+                        username: req.body.username,
+                        password: req.body.password,
+                        email: req.body.email,
+                        birthday: req.body.birthday
+                    })
+                    // after the document is created, a callback takes the document I just added as a parameter
+                    // the response contains a status code and the document I just created (called "user")
+                    // provides a feedback for the client
+                    .then((user) => { res.status(201).json(user) })
+                    // error-handling function
+                    .catch((error) => {
+                        console.error(error);
+                        res.status(500).send('Error: ' + error);
+                    })
+            }
+        })
+        .catch((error) => {
+            console.error(error);
+            res.status(500).send('Error: ' + error);
+        });
+});
+
+
+
+// Update a user's info, by username (Mongoose)
+/* We’ll expect JSON in this format
+{
+  Username: String, (required)
+  Password: String, (required)
+  Email: String, (required)
+  Birthday: Date
+}*/
+
+app.put('/users/:username', async (req, res) => {
+    await Users.findOneAndUpdate({ username: req.params.username },
+        {
+            // $set operator replaces the value of a field with the specified value
+            // specify which fields in the user document I am updating
+            $set:
+            {
+                // The new values I am setting each of these specific fields to is extracted from the request body
+                // this means that they come from a request sent by the user
+                username: req.body.username,
+                password: req.body.password,
+                email: req.body.email,
+                birthday: req.body.birthday
+            }
+        },
+        // { new: true } makes sure that the updated document is returned not the old/original document
+        // It specifies that, in the proceeding callback, I want the document that was just updated to be returned
+        { new: true })
+        .then((updatedUser) => {
+            res.json(updatedUser);
+        })
+        .catch((err) => {
+            console.error(err);
+            res.status(500).send('Error: ' + err);
+        })
+});
+
+
+
+// Add a favorite movie
+// Add a movie to a user's list of favorites (Mongoose)
+app.post('/users/:username/movies/:movieID', async (req, res) => {
+    // searches the Users collection for a document where the Username field matches the value in req.params.Username from the URL
+    await Users.findOneAndUpdate({ username: req.params.username }, {
+        // If a matching user is found, it uses MongoDB's $addToSet update operator to add the MovieID from req.params.MovieID to the FavoriteMovies array of that user's document.
+        $addToSet: { favoriteMovies: req.params.movieID }
     },
-    {
-        id: 2,
-        name: "Joe",
-        favoriteMovies: ["The French Dispatch"]
-    }
-];
+        { new: true }) // This line makes sure that the updated document is returned
+        .then((updatedUser) => {
+            res.json(updatedUser);
+        })
+        .catch((err) => {
+            console.error(err);
+            res.status(500).send('Error: ' + err);
+        });
+});
 
 
-// movies array
-let movies = [
-    {
-        "Title": "Jurassic Park",
-        "Description": "Jurassic Park is a blockbuster film where genetically-engineered dinosaurs wreak havoc in a theme park, putting visitors in peril. The movie explores the consequences of meddling with nature and the struggle for survival in the face of prehistoric giants.",
-        "Genre": {
-            "Name": "Science Fiction Adventure",
-            "Description": "Is a genre that combines futuristic elements with thrilling action and exploration"
-        },
-        "Director": {
-            "Name": "Steven Spielberg",
-            "Bio": "Steven Spielberg was born on December 18, 1946, in Cincinnati, Ohio. He's famous for directing many blockbuster movies, such as Jurassic Park, E.T. the Extra-Terrestrial and Schindler's List and he's one of the most influential directors in the history of cinema.",
-            "Birth": 1946.0
-        },
-        "ImageURL": " ",
-        "Featured": false
+
+// Remove a favorite movie
+// Remove a movie from a user's list of favorites (Mongoose)
+app.delete('/users/:username/movies/:movieID', async (req, res) => {
+    // searches the Users collection for a document where the Username field matches the value in req.params.Username from the URL
+    await Users.findOneAndUpdate({ username: req.params.username }, {
+        // If a matching user is found, it uses MongoDB's $push update operator to add the MovieID from req.params.MovieID to the FavoriteMovies array of that user's document.
+        $pull: { favoriteMovies: req.params.movieID }
     },
-    {
-        "Title": "Terminator",
-        "Description": "Terminator is a sci-fi thriller where a cyborg assassin is sent back in time to kill a woman whose unborn son will lead a resistance against machines in a post-apocalyptic future.",
-        "Genre": {
-            "Name": "Science Fiction Thriller",
-            "Description": "Is a genre that combines futuristic elements with suspenseful and intense storytelling."
-        },
-        "Director": {
-            "Name": "James Cameron",
-            "Bio": "James Cameron was born on August 16, 1954, in Kapuskasing, Ontario, Canada. He's known for directing blockbuster films like Terminator, Titanic, and Avatar and he's a highly acclaimed filmmaker in the industry.",
-            "Birth": 1954.0
-        },
-        "ImageURL": " ",
-        "Featured": false
-    }
-];
-
-
-
-
-// CREATE - a new user
-app.post('/users', (req, res) => {
-    const newUser = req.body;
-
-    if (newUser.name) {
-        newUser.id = uuid.v4();
-        users.push(newUser);
-        res.status(201).json(newUser);
-    } else {
-        res.status(400).send('users need names');
-    }
-})
-
-
-// UPDATE - user data
-app.put('/users/:id', (req, res) => {
-    const { id } = req.params;
-    const updatedUser = req.body;
-
-    // let is used because if there is a user the name gets updated
-    // "==" because here the id in the array is a number and the id in const is a string
-    let user = users.find(user => user.id == id);
-
-    if (user) {
-        user.name = updatedUser.name;
-        // 200 instead of 201 because it is edited and not created
-        res.status(200).json(user);
-    } else {
-        res.status(400).send('no such user');
-    }
-})
-
-
-// CREATE - user add a favorite movie
-app.post('/users/:id/:movieTitle', (req, res) => {
-    const { id, movieTitle } = req.params;
-
-    let user = users.find(user => user.id == id);
-
-    if (user) {
-        user.favoriteMovies.push(movieTitle);
-        res.status(200).send(`${movieTitle} has been added to user ${id}'s array`);
-    } else {
-        res.status(400).send('no such user');
-    }
-})
-
-
-// DELETE - user deletes a favorite movie
-app.delete('/users/:id/:movieTitle', (req, res) => {
-    const { id, movieTitle } = req.params;
-
-    let user = users.find(user => user.id == id);
-
-    if (user) {
-        user.favoriteMovies = user.favoriteMovies.filter( title => title !== movieTitle);
-        res.status(200).send(`${movieTitle} has been removed from user ${id}'s array`);
-    } else {
-        res.status(400).send('no such user');
-    }
-})
-
-// DELETE - user deletes account
-app.delete('/users/:id', (req, res) => {
-    const { id } = req.params;
-
-    let user = users.find(user => user.id == id);
-
-    if (user) {
-        // "!="" because here the id in the array is a number and the id in const is a string
-        users = users.filter( user => user.id != id);
-        res.status(200).send(`user ${id} has been deleted`);
-    } else {
-        res.status(400).send('no such user');
-    }
-})
-
-
-
-// READ - return a list of all movies 
-app.get('/movies', (req, res) => {
-    // sends the array with the movie objects as a JSON response
-    res.status(200).json(movies);
-});
-
-// READ - return a single movie
-app.get('/movies/:title', (req, res) => {
-    const { title } = req.params;
-    // checking if a movie in the movie array has the same name as the movie from the URL
-    // movie is a parameter in the arrow function passed to the find method
-    // the arrow function is called for each element in the movies array with movie representing the current element
-    // within the function it checks if the title property of the current movie object equals the searched title
-    const movie = movies.find(movie => movie.Title === title);
-
-    if (movie) {
-        res.status(200).json(movie);
-    } else {
-        res.status(400).send('no such movie');
-    }
-});
-
-// READ - return data about a genre by name
-app.get('/movies/genre/:genreName', (req, res) => {
-    const { genreName } = req.params;
-    // .Genre returns only the genre of the movie and not the whole object from the array
-    const genre = movies.find(movie => movie.Genre.Name === genreName).Genre;
-
-    if (genre) {
-        res.status(200).json(genre);
-    } else {
-        res.status(400).send('no such genre');
-    }
+        { new: true }) // This line makes sure that the updated document is returned
+        .then((updatedUser) => {
+            res.json(updatedUser);
+        })
+        .catch((err) => {
+            console.error(err);
+            res.status(500).send('Error: ' + err);
+        });
 });
 
 
-// READ - return data about a director by name
-app.get('/movies/director/:directorName', (req, res) => {
-    const { directorName } = req.params;
-    const director = movies.find(movie => movie.Director.Name === directorName).Director;
 
-    if (director) {
-        res.status(200).json(director);
-    } else {
-        res.status(400).send('no such director');
-    }
+// Delete a user by username (Mongoose)
+app.delete('/users/:username', async (req, res) => {
+    await Users.findOneAndDelete({ username: req.params.username })
+        .then((user) => {
+            if (!user) {
+                res.status(400).send(req.params.username + ' was not found');
+            } else {
+                res.status(200).send(req.params.username + ' was deleted.');
+            }
+        })
+        .catch((err) => {
+            console.error(err);
+            res.status(500).send('Error: ' + err);
+        });
 });
-
 
 
 
@@ -218,7 +310,6 @@ app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(err.status || 500).send('Something broke!');
 });
-
 
 
 

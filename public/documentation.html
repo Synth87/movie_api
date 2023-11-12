@@ -57,23 +57,22 @@
                 <br>
                 <br>
                 {
-                "Title": "Jurassic Park",
-                "Description": "Jurassic Park is a blockbuster film where genetically-engineered dinosaurs wreak havoc
-                in a theme park, putting visitors in peril. The movie explores the consequences of meddling with nature
-                and the struggle for survival in the face of prehistoric giants.",
-                "Genre": {
-                "Name": "Science Fiction Adventure",
-                "Description": "Is a genre that combines futuristic elements with thrilling action and exploration"
+                "genre": {
+                "name": "Sci-Fi",
+                "description": "A genre dealing with imaginative and futuristic concepts such as advanced science and
+                technology, space exploration, time travel, and extraterrestrial life."
                 },
-                "Director": {
-                "Name": "Steven Spielberg",
-                "Bio": "Steven Spielberg was born on December 18, 1946, in Cincinnati, Ohio. He's famous for directing
-                many blockbuster movies, such as Jurassic Park, E.T. the Extra-Terrestrial and Schindler's List and he's
-                one of the most influential directors in the history of cinema.",
-                "Birth": 1946.0
+                "director": {
+                "name": "George Lucas",
+                "bio": "George Walton Lucas Jr. is an American film director, producer, and screenwriter. He is best
+                known for creating the Star Wars and Indiana Jones franchises.",
+                "birthyear": 1944
                 },
-                "ImageURL": " ",
-                "Featured": false
+                "_id": "65465b7c3d2db11d72639439",
+                "title": "Star Wars",
+                "description": "A young farm boy joins a group of rebels to fight an oppressive empire, discovering his
+                connection to a mystical force known as the Force.",
+                "featured": true
                 }
             </td>
         </tr>
@@ -88,9 +87,10 @@
                 example:
                 <br>
                 <br>
-                "Genre": {
-                "Name": "Science Fiction Adventure",
-                "Description": "Is a genre that combines futuristic elements with thrilling action and exploration"
+                {
+                "name": "Sci-Fi",
+                "description": "A genre dealing with imaginative and futuristic concepts such as advanced science and
+                technology, space exploration, time travel, and extraterrestrial life."
                 }
             </td>
         </tr>
@@ -101,22 +101,59 @@
         <!-- GET -->
         <tr>
             <td>Get data about a director by name</td>
-            <td>/movies/directors/:directorName</td>
+            <td>/movies/director/:directorName</td>
             <td>GET</td>
             <td>none</td>
             <td>A JSON object holding data about a director containing the properties for name, bio and birth. Here is
                 an example:
                 <br>
                 <br>
-                "Director": {
-                "Name": "Steven Spielberg",
-                "Bio": "Steven Spielberg was born on December 18, 1946, in Cincinnati, Ohio. He's famous for directing
-                many blockbuster movies, such as Jurassic Park, E.T. the Extra-Terrestrial and Schindler's List and he's
-                one of the most influential directors in the history of cinema.",
-                "Birth": 1946.0
+                {
+                "name": "James Cameron",
+                "bio": "This is a new bio!",
+                "birthyear": 1954
                 }
             </td>
         </tr>
+
+
+
+        <!-- GET -->
+        <tr>
+            <td>Get a list of all users</td>
+            <td>/users</td>
+            <td>GET</td>
+            <td>none</td>
+            <td>A JSON object holding an array with all users.</td>
+        </tr>
+
+
+
+
+        <!-- GET -->
+        <tr>
+            <td>Get data about a single user by name</td>
+            <td>/users/:username</td>
+            <td>GET</td>
+            <td>none</td>
+            <td>A JSON object holding data about the user that was added, including an ID:
+                <br>
+                <br>
+                {
+                "_id": "65465ffb3d2db11d72639443",
+                "username": "Amanda Martin",
+                "password": "hgrk7342!",
+                "email": "amanda.martin@test.com",
+                "birthday": "1990-02-01T00:00:00.000Z",
+                "favoriteMovies": [
+                "65465bdd3d2db11d7263943a"
+                ]
+                }
+            </td>
+        </tr>
+
+
+
 
         <!-- POST -->
         <tr>
@@ -127,17 +164,22 @@
                 <br>
                 <br>
                 {
-                name: "Anna",
-                favoriteMovies: []
+                "username": "Jane Doe",
+                "password": "jane12345!",
+                "email": "jane.doe@test.com",
+                "birthday": "1987-03-08"
                 }
             </td>
             <td>A JSON object holding data about the user that was added, including an ID:
                 <br>
                 <br>
                 {
-                id: 1,
-                name: "Anna",
-                favoriteMovies: []
+                "username": "Jane Doe",
+                "password": "jane12345!",
+                "email": "jane.doe@test.com",
+                "favoriteMovies": [],
+                "_id": "655024e6172f78f5f27c3cbe",
+                "__v": 0
                 }
             </td>
         </tr>
@@ -145,23 +187,27 @@
         <!-- PUT -->
         <tr>
             <td>Update user username</td>
-            <td>/users/:id</td>
+            <td>/users/:username</td>
             <td>PUT</td>
             <td>A JSON object holding data about the user to update, structured like:
                 <br>
                 <br>
                 {
-                name: "Anna",
-                favoriteMovies: []
+                "username": "Jane Doe",
+                "password": "doe7890=",
+                "email": "jane.doe@example.com"
                 }
             </td>
             <td>A JSON object holding data about the user that was updated, including an ID:
                 <br>
                 <br>
                 {
-                id: 1,
-                name: "Anna",
-                favoriteMovies: []
+                "_id": "655024e6172f78f5f27c3cbe",
+                "username": "Jane Doe",
+                "password": "doe7890=",
+                "email": "jane.doe@example.com",
+                "favoriteMovies": [],
+                "__v": 0
                 }
             </td>
         </tr>
@@ -172,25 +218,53 @@
         <!-- POST -->
         <tr>
             <td>Add a movie to user favorite list</td>
-            <td>/users/:id/:movieTitle</td>
+            <td>/users/:username/movies/:movieID</td>
             <td>POST</td>
             <td>none</td>
-            <td>A text message indicating if a movie was successfully added to the favorite list of the user.</td>
+            <td>A JSON object holding data about the user that was updated, including an ID:
+                <br>
+                <br>
+                {
+                "_id": "65465ffb3d2db11d72639445",
+                "username": "Christopher Lee",
+                "password": "mcbl2348?",
+                "email": "christopher.lee@test.com",
+                "birthday": "2002-06-05T00:00:00.000Z",
+                "favoriteMovies": [
+                "65465c3a3d2db11d7263943d",
+                "65465c3a3d2db11d7263943c"
+                ]
+                }
+
+            </td>
         </tr>
 
         <!-- DELETE -->
         <tr>
             <td>Remove a movie from user favorite list</td>
-            <td>/users/:id/:movieTitle</td>
+            <td>/users/:username/movies/:movieID</td>
             <td>DELETE</td>
             <td>none</td>
-            <td>A text message indicating if a movie was successfully removed from the favorite list of the user.</td>
+            <td>A JSON object holding data about the user that was updated, including an ID:
+                <br>
+                <br>
+                {
+                "_id": "65465ffb3d2db11d72639445",
+                "username": "Christopher Lee",
+                "password": "mcbl2348?",
+                "email": "christopher.lee@test.com",
+                "birthday": "2002-06-05T00:00:00.000Z",
+                "favoriteMovies": [
+                "65465c3a3d2db11d7263943d"
+                ]
+                }
+            </td>
         </tr>
 
         <!-- DELETE -->
         <tr>
             <td>Delete user registration</td>
-            <td>/users/:id</td>
+            <td>/users/:username</td>
             <td>DELETE</td>
             <td>none</td>
             <td>A text message indicating if a user was successfully removed.</td>
