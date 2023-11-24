@@ -40,9 +40,32 @@ app.use(morgan('common'));
 
 
 
+
+
+// this code must be after the bodyParser middleware function
+// after importing the module, it is immediately called as a function and given the argument "app"
+// this ensures that express is available in my auth.js as well
+// in detail: I am requiring the function I exported in auth.js and call it with the argument "app".
+// This references the express instance in my project. I pass the express-functionality to the function from auth.js
+// The argument "app" is passed to the parameter "router" in the arrow function I require from the auth.js file.
+let auth = require('./auth.js')(app);
+
+
+
+// requiring the passport module
+const passport = require('passport');
+// requiring the passport.js file with the passport strategies
+require('./passport.js');
+
+
+
+
+
+
+
 // Movies
 // Get all movies (Mongoose)
-app.get('/movies', async (req, res) => {
+app.get('/movies', passport.authenticate('jwt', { session: false }), async (req, res) => {
     await Movies.find()
         .then((movies) => {
             res.status(200).json(movies);
@@ -56,7 +79,7 @@ app.get('/movies', async (req, res) => {
 
 
 // Get movie by title (Mongoose)
-app.get('/movies/:title', async (req, res) => {
+app.get('/movies/:title', passport.authenticate('jwt', { session: false }), async (req, res) => {
     await Movies.findOne({ title: req.params.title })
         .then((movie) => {
             if (!movie) {
@@ -74,7 +97,7 @@ app.get('/movies/:title', async (req, res) => {
 
 
 // Get genre by name (Mongoose)
-app.get('/movies/genre/:genreName', async (req, res) => {
+app.get('/movies/genre/:genreName', passport.authenticate('jwt', { session: false }), async (req, res) => {
     await Movies.findOne({ 'genre.name': req.params.genreName })
         // if the search is successful the whole movie object is given back
         .then((movie) => {
@@ -93,7 +116,7 @@ app.get('/movies/genre/:genreName', async (req, res) => {
 
 
 // Get director by name (Mongoose)
-app.get('/movies/director/:directorName', async (req, res) => {
+app.get('/movies/director/:directorName', passport.authenticate('jwt', { session: false }), async (req, res) => {
     await Movies.findOne({ 'director.name': req.params.directorName })
         .then((movie) => {
             if (!movie) {
@@ -116,7 +139,7 @@ app.get('/movies/director/:directorName', async (req, res) => {
 
 // Users
 // Get all users (Mongoose)
-app.get('/users', async (req, res) => {
+app.get('/users', passport.authenticate('jwt', { session: false }), async (req, res) => {
     await Users.find()
         .then((users) => {
             res.status(200).json(users);
@@ -130,7 +153,7 @@ app.get('/users', async (req, res) => {
 
 
 // Get a user by username (Mongoose)
-app.get('/users/:username', async (req, res) => {
+app.get('/users/:username', passport.authenticate('jwt', { session: false }), async (req, res) => {
     await Users.findOne({ username: req.params.username })
         .then((user) => {
             if (!user) {
@@ -158,6 +181,7 @@ app.get('/users/:username', async (req, res) => {
   Birthday: Date
 }*/
 
+// here the password strategy must not be added otherwise a new user can never be added
 app.post('/users', async (req, res) => {
     // check if a user with the username provided by the client already exists
     await Users.findOne({ username: req.body.username })
@@ -208,7 +232,7 @@ app.post('/users', async (req, res) => {
   Birthday: Date
 }*/
 
-app.put('/users/:username', async (req, res) => {
+app.put('/users/:username', passport.authenticate('jwt', { session: false }), async (req, res) => {
     await Users.findOneAndUpdate({ username: req.params.username },
         {
             // $set operator replaces the value of a field with the specified value
@@ -239,7 +263,7 @@ app.put('/users/:username', async (req, res) => {
 
 // Add a favorite movie
 // Add a movie to a user's list of favorites (Mongoose)
-app.post('/users/:username/movies/:movieID', async (req, res) => {
+app.post('/users/:username/movies/:movieID', passport.authenticate('jwt', { session: false }), async (req, res) => {
     // searches the Users collection for a document where the Username field matches the value in req.params.Username from the URL
     await Users.findOneAndUpdate({ username: req.params.username }, {
         // If a matching user is found, it uses MongoDB's $addToSet update operator to add the MovieID from req.params.MovieID to the FavoriteMovies array of that user's document.
@@ -259,7 +283,7 @@ app.post('/users/:username/movies/:movieID', async (req, res) => {
 
 // Remove a favorite movie
 // Remove a movie from a user's list of favorites (Mongoose)
-app.delete('/users/:username/movies/:movieID', async (req, res) => {
+app.delete('/users/:username/movies/:movieID', passport.authenticate('jwt', { session: false }), async (req, res) => {
     // searches the Users collection for a document where the Username field matches the value in req.params.Username from the URL
     await Users.findOneAndUpdate({ username: req.params.username }, {
         // If a matching user is found, it uses MongoDB's $push update operator to add the MovieID from req.params.MovieID to the FavoriteMovies array of that user's document.
@@ -278,7 +302,7 @@ app.delete('/users/:username/movies/:movieID', async (req, res) => {
 
 
 // Delete a user by username (Mongoose)
-app.delete('/users/:username', async (req, res) => {
+app.delete('/users/:username', passport.authenticate('jwt', { session: false }), async (req, res) => {
     await Users.findOneAndDelete({ username: req.params.username })
         .then((user) => {
             if (!user) {
